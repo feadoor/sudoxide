@@ -8,8 +8,11 @@ mod fish;
 mod y_wing;
 mod w_wing;
 mod xyz_wing;
+mod chaining;
 
 use std::iter::empty;
+
+use chaining::Aic;
 
 use crate::grid::cell::{CellIdx, CellSet};
 use crate::grid::candidate::{Candidate, CandidateSet};
@@ -45,6 +48,10 @@ pub enum Step<const N: usize> {
     YWing { pivot: CellIdx<N>, pincer1: CellIdx<N>, pincer2: CellIdx<N>, value: Candidate<N> },
     WWing { pincer1: CellIdx<N>, pincer2: CellIdx<N>, house: CellSet<N>, covered_value: Candidate<N>, eliminated_value: Candidate<N> },
     XYZWing { pivot: CellIdx<N>, pincer1: CellIdx<N>, pincer2: CellIdx<N>, value: Candidate<N> },
+    XYChain { aic: Aic<N> },
+    XChain { aic: Aic<N> },
+    Aic { aic: Aic<N> },
+    AlsAic { aic: Aic<N> },
 }
 
 #[derive(Copy, Clone)]
@@ -60,6 +67,10 @@ pub enum Strategy {
     YWing,
     WWing,
     XYZWing,
+    XYChain,
+    XChain,
+    Aic,
+    AlsAic,
 }
 
 pub fn all_strategies(n: usize) -> Vec<Strategy> {
@@ -69,6 +80,7 @@ pub fn all_strategies(n: usize) -> Vec<Strategy> {
         .chain((2 ..= n / 2).map(|degree| Strategy::Fish(degree)))
         .chain([Strategy::YWing, Strategy::WWing, Strategy::XYZWing])
         .chain((2 ..= n / 2).map(|degree| Strategy::FinnedFish(degree)))
+        .chain([Strategy::XYChain, Strategy::XChain, Strategy::Aic, Strategy::AlsAic])
         .collect()
 }
 
@@ -88,6 +100,10 @@ impl<const N: usize> Step<N> {
             ref y_wing @ Step::YWing { .. } => y_wing::deductions(grid, y_wing),
             ref w_wing @ Step::WWing { .. } => w_wing::deductions(grid, w_wing),
             ref xyz_wing @ Step::XYZWing { .. } => xyz_wing::deductions(grid, xyz_wing),
+            ref xy_chain @ Step::XYChain { .. } => chaining::deductions(grid, xy_chain),
+            ref x_chain @ Step::XChain { .. } => chaining::deductions(grid, x_chain),
+            ref aic @ Step::Aic { .. } => chaining::deductions(grid, aic),
+            ref als_aic @ Step::AlsAic { .. } => chaining::deductions(grid, als_aic),
         }
     }
 
@@ -105,6 +121,10 @@ impl<const N: usize> Step<N> {
             ref y_wing @ Step::YWing { .. } => y_wing::description(grid, y_wing),
             ref w_wing @ Step::WWing { .. } => w_wing::description(grid, w_wing),
             ref xyz_wing @ Step::XYZWing { .. } => xyz_wing::description(grid, xyz_wing),
+            ref xy_chain @ Step::XYChain { .. } => chaining::description(grid, xy_chain),
+            ref x_chain @ Step::XChain { .. } => chaining::description(grid, x_chain),
+            ref aic @ Step::Aic { .. } => chaining::description(grid, aic),
+            ref als_aic @ Step::AlsAic { .. } => chaining::description(grid, als_aic),
         }
     }
 }
@@ -123,6 +143,10 @@ impl Strategy {
             Strategy::YWing => Box::new(y_wing::find(grid)),
             Strategy::WWing => Box::new(w_wing::find(grid)),
             Strategy::XYZWing => Box::new(xyz_wing::find(grid)),
+            Strategy::XYChain => Box::new(chaining::find_xy_chains(grid)),
+            Strategy::XChain => Box::new(chaining::find_x_chains(grid)),
+            Strategy::Aic => Box::new(chaining::find_aics(grid)),
+            Strategy::AlsAic => Box::new(chaining::find_als_aics(grid)),
         }
     }
 }

@@ -32,7 +32,7 @@ pub fn description<const N: usize>(grid: &Grid<N>, w_wing: &Step<N>) -> String {
 }
 
 fn find_for_pincers_and_house<'a, const N: usize>(grid: &'a Grid<N>, pincer1: CellIdx<N>, pincer2: CellIdx<N>, house: &'a CellSet<N>) -> impl Iterator<Item = Step<N>> + 'a {
-    let mut candidates = grid.candidates(pincer1).into_iter();
+    let mut candidates = grid.candidates(pincer1).iter();
     let (candidate1, candidate2) = (candidates.next().unwrap(), candidates.next().unwrap());
     let common_neighbours = grid.neighbours(pincer1) & grid.neighbours(pincer2);
     let unseen_cells = house & !(grid.neighbours(pincer1) | grid.neighbours(pincer2));

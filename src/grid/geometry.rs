@@ -34,6 +34,18 @@ impl <const N: usize> Grid<N> {
         CellSet::full()
     }
 
+    pub fn rows(&self) -> &[CellSet<N>] {
+        &self.rows
+    }
+
+    pub fn columns(&self) -> &[CellSet<N>] {
+        &self.cols
+    }
+
+    pub fn regions(&self) -> &[CellSet<N>] {
+        &self.regions
+    }
+
     pub fn all_houses(&self) -> &[CellSet<N>] {
         &self.all_houses
     }
@@ -48,6 +60,10 @@ impl <const N: usize> Grid<N> {
 
     pub fn common_neighbours(&self, cells: &CellSet<N>) -> CellSet<N> {
         CellSet::intersection(cells.iter().map(|cell| self.neighbours(cell)))
+    }
+
+    pub fn all_houses_containing(&self, cells: &CellSet<N>) -> Vec<&CellSet<N>> {
+        self.all_houses.iter().filter(|house| house.contains_all(cells)).collect()
     }
 
     pub fn intersecting_rows(&self, cells: &CellSet<N>) -> Vec<&CellSet<N>> {

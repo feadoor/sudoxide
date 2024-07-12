@@ -4,7 +4,7 @@ use std::ops::{BitAnd, BitAndAssign, BitOr, BitOrAssign, BitXor, BitXorAssign, N
 use bitvec::prelude::*;
 use itertools::Itertools;
 
-#[derive(Copy, Clone, PartialEq, Eq)]
+#[derive(Copy, Clone, PartialEq, Eq, Hash)]
 pub struct Candidate<const N: usize>(pub usize);
 
 #[derive(Clone, PartialEq, Eq)]

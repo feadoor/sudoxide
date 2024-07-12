@@ -4,7 +4,7 @@ use bitvec::prelude::*;
 
 use super::candidate::{Candidate, CandidateSet};
 
-#[derive(Copy, Clone, Debug)]
+#[derive(Copy, Clone, Debug, Hash, PartialEq, Eq)]
 pub struct CellIdx<const N: usize>(pub usize);
 
 impl<const N: usize> CellIdx<N> {
@@ -72,7 +72,7 @@ impl<const N: usize> Cell<N> {
     }
 }
 
-#[derive(Clone, PartialEq, Eq)]
+#[derive(Clone, PartialEq, Eq, Hash)]
 pub struct CellSet<const N: usize> {
     cells: BitVec,
 }
@@ -117,6 +117,10 @@ impl<const N: usize> CellSet<N> {
         self.cells[cell.0]
     }
 
+    pub fn contains_all(&self, cells: &CellSet<N>) -> bool {
+        &(self & cells) == cells
+    }
+
     pub fn intersects<T>(&self, other: T) -> bool where Self: BitAnd<T, Output = Self> {
         !(self.clone() & other).is_empty()
     }
@@ -135,6 +139,10 @@ impl<const N: usize> CellSet<N> {
 
     pub fn filter<P: FnMut(&CellIdx<N>) -> bool>(&self, predicate: P) -> CellSet<N> {
         CellSet::from_cells(self.iter().filter(predicate))
+    }
+
+    pub fn add_cell(&mut self, cell: CellIdx<N>) {
+        self.cells.set(cell.0, true);
     }
 
     pub fn remove_cell(&mut self, cell: CellIdx<N>) {

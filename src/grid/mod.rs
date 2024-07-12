@@ -7,7 +7,7 @@ use std::fmt;
 
 pub mod candidate;
 pub mod cell;
-mod regions;
+mod geometry;
 pub mod variants;
 
 #[derive(Copy, Clone, PartialEq, Eq)]
@@ -110,12 +110,16 @@ impl<const N: usize> Grid<N> {
         self.cells[cell.0].has_any_of_candidates(values)
     }
 
+    pub fn empty_cells(&self) -> CellSet<N> {
+        self.empty_cells_in(&CellSet::full())
+    }
+
     pub fn cells_with_candidate(&self, value: Candidate<N>) -> CellSet<N> {
-        CellSet::full().filter(|&cell| self.has_candidate(cell, value))
+        self.cells_with_candidate_in(&CellSet::full(), value)
     }
 
     pub fn cells_with_n_candidates(&self, num_candidates: usize) -> CellSet<N> {
-        CellSet::full().filter(|&cell| self.num_candidates(cell) == num_candidates)
+        self.cells_with_n_candidates_in(&CellSet::full(), num_candidates)
     }
 
     pub fn empty_cells_in(&self, cells: &CellSet<N>) -> CellSet<N> {
@@ -168,6 +172,12 @@ impl<const N: usize> Grid<N> {
 
     fn create_neighbours(all_houses: &[CellSet<N>], mut neighbours: Vec<CellSet<N>>) -> Vec<CellSet<N>> {
         
+        for cell in 0 .. N * N {
+            for CellIdx(neighbour) in neighbours[cell].into_iter() {
+                neighbours[neighbour].add_cell(CellIdx(cell));
+            }
+        }
+
         for house in all_houses {
             for CellIdx(cell) in house.iter() {
                 neighbours[cell] |= house;
