@@ -62,10 +62,10 @@ fn name<'a>(flavour: TurbotFlavour) -> &'a str {
 }
 
 fn find_for_bases_and_value<'a, const N: usize>(grid: &'a Grid<N>, flavour: TurbotFlavour, base1: &'a CellSet<N>, base2: &'a CellSet<N>, value: Candidate<N>) -> impl Iterator<Item = Step<N>> + 'a {
-    grid.all_houses().iter().flat_map(move |cover| {
-        let base_cells = grid.cells_with_candidate_in(&(base1 | base2), value);
+    let base_cells = grid.cells_with_candidate_in(&(base1 | base2), value);
+    grid.all_houses_with_candidate(value).into_iter().flat_map(move |cover| {
         let cover_cells = grid.cells_with_candidate_in(cover, value);
-        let elimination_cells = grid.common_neighbours(&(base_cells & !cover_cells));
+        let elimination_cells = grid.common_neighbours(&(&base_cells & !cover_cells));
         
         if grid.candidate_appears_in(&elimination_cells, value) {
             Some(Step::TurbotFish { flavour, base1: base1.clone(), base2: base2.clone(), cover: cover.clone(), value })

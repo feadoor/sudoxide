@@ -74,6 +74,10 @@ impl <const N: usize> Grid<N> {
         self.regions.iter().filter(|region| self.candidate_appears_in(region, value)).collect()
     }
 
+    pub fn all_houses_with_candidate(&self, value: Candidate<N>) -> Vec<&CellSet<N>> {
+        self.all_houses().iter().filter(|house| self.candidate_appears_in(house, value)).collect()
+    }
+
     pub fn all_houses_containing(&self, cells: &CellSet<N>) -> Vec<&CellSet<N>> {
         self.all_houses.iter().filter(|house| house.contains_all(cells)).collect()
     }
