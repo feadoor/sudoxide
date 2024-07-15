@@ -5,6 +5,7 @@ mod pointing_claiming;
 mod hidden_subset;
 mod naked_subset;
 mod fish;
+mod turbot;
 mod y_wing;
 mod w_wing;
 mod xyz_wing;
@@ -35,6 +36,13 @@ impl<const N: usize> Deduction<N> {
     }
 }
 
+#[derive(Copy, Clone)]
+pub enum TurbotFlavour {
+    Skyscraper,
+    TwoStringKite,
+    EmptyRectangle,
+}
+
 pub enum Step<const N: usize> {
     NoCandidatesForCell { cell: CellIdx<N> },
     NoPlaceForCandidateInHouse { house: CellSet<N>, value: Candidate<N> },
@@ -44,7 +52,8 @@ pub enum Step<const N: usize> {
     PointingClaiming { house: CellSet<N>, neighbours: CellSet<N>, value: Candidate<N> },
     HiddenSubset { house: CellSet<N>, cells: CellSet<N>, values: CandidateSet<N> },
     NakedSubset { cells: CellSet<N>, values: CandidateSet<N> },
-    Fish { base_type: House, base: CellSet<N>, cover: CellSet<N>, fins: CellSet<N>, value: Candidate<N>, },
+    Fish { base_type: House, base: CellSet<N>, cover: CellSet<N>, fins: CellSet<N>, value: Candidate<N> },
+    TurbotFish { flavour: TurbotFlavour, base1: CellSet<N>, base2: CellSet<N>, cover: CellSet<N>, value: Candidate<N> },
     YWing { pivot: CellIdx<N>, pincer1: CellIdx<N>, pincer2: CellIdx<N>, value: Candidate<N> },
     WWing { pincer1: CellIdx<N>, pincer2: CellIdx<N>, house: CellSet<N>, covered_value: Candidate<N>, eliminated_value: Candidate<N> },
     XYZWing { pivot: CellIdx<N>, pincer1: CellIdx<N>, pincer2: CellIdx<N>, value: Candidate<N> },
@@ -54,7 +63,7 @@ pub enum Step<const N: usize> {
     AlsAic { aic: Aic<N> },
 }
 
-#[derive(Copy, Clone)]
+#[derive(Copy, Clone, Debug)]
 pub enum Strategy {
     FullHouse,
     HiddenSingle,
@@ -64,6 +73,9 @@ pub enum Strategy {
     NakedSubset(usize),
     Fish(usize),
     FinnedFish(usize),
+    Skyscraper,
+    TwoStringKite,
+    EmptyRectangle,
     YWing,
     WWing,
     XYZWing,
@@ -78,6 +90,7 @@ pub fn all_strategies(n: usize) -> Vec<Strategy> {
         .chain([Strategy::FullHouse, Strategy::HiddenSingle, Strategy::NakedSingle, Strategy::PointingClaiming])
         .chain((2 ..= n / 2).flat_map(|degree| [Strategy::NakedSubset(degree), Strategy::HiddenSubset(degree)]))
         .chain((2 ..= n / 2).map(|degree| Strategy::Fish(degree)))
+        .chain([Strategy::Skyscraper, Strategy::TwoStringKite, Strategy::EmptyRectangle])
         .chain([Strategy::YWing, Strategy::WWing, Strategy::XYZWing])
         .chain((2 ..= n / 2).map(|degree| Strategy::FinnedFish(degree)))
         .chain([Strategy::XYChain, Strategy::XChain, Strategy::Aic, Strategy::AlsAic])
@@ -97,6 +110,7 @@ impl<const N: usize> Step<N> {
             ref hidden_subset @ Step::HiddenSubset { .. } => hidden_subset::deductions(grid, hidden_subset),
             ref naked_subset @ Step::NakedSubset { .. } => naked_subset::deductions(grid, naked_subset),
             ref fish @ Step::Fish { .. } => fish::deductions(grid, fish),
+            ref turbot_fish @ Step::TurbotFish { .. } => turbot::deductions(grid, turbot_fish),
             ref y_wing @ Step::YWing { .. } => y_wing::deductions(grid, y_wing),
             ref w_wing @ Step::WWing { .. } => w_wing::deductions(grid, w_wing),
             ref xyz_wing @ Step::XYZWing { .. } => xyz_wing::deductions(grid, xyz_wing),
@@ -118,6 +132,7 @@ impl<const N: usize> Step<N> {
             ref hidden_subset @ Step::HiddenSubset { .. } => hidden_subset::description(grid, hidden_subset),
             ref naked_subset @ Step::NakedSubset { .. } => naked_subset::description(grid, naked_subset),
             ref fish @ Step::Fish { .. } => fish::description(grid, fish),
+            ref turbot_fish @ Step::TurbotFish { .. } => turbot::description(grid, turbot_fish),
             ref y_wing @ Step::YWing { .. } => y_wing::description(grid, y_wing),
             ref w_wing @ Step::WWing { .. } => w_wing::description(grid, w_wing),
             ref xyz_wing @ Step::XYZWing { .. } => xyz_wing::description(grid, xyz_wing),
@@ -140,6 +155,9 @@ impl Strategy {
             Strategy::NakedSubset(degree) => Box::new(naked_subset::find(grid, degree)),
             Strategy::Fish(degree) => Box::new(fish::find(grid, degree, false)),
             Strategy::FinnedFish(degree) => Box::new(fish::find(grid, degree, true)),
+            Strategy::Skyscraper => Box::new(turbot::find_skyscrapers(grid)),
+            Strategy::TwoStringKite => Box::new(turbot::find_kites(grid)),
+            Strategy::EmptyRectangle => Box::new(turbot::find_rectangles(grid)),
             Strategy::YWing => Box::new(y_wing::find(grid)),
             Strategy::WWing => Box::new(w_wing::find(grid)),
             Strategy::XYZWing => Box::new(xyz_wing::find(grid)),

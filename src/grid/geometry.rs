@@ -1,4 +1,4 @@
-use super::candidate::CandidateSet;
+use super::candidate::{Candidate, CandidateSet};
 use super::{Grid, House};
 use super::cell::{CellIdx, CellSet};
 
@@ -60,6 +60,18 @@ impl <const N: usize> Grid<N> {
 
     pub fn common_neighbours(&self, cells: &CellSet<N>) -> CellSet<N> {
         CellSet::intersection(cells.iter().map(|cell| self.neighbours(cell)))
+    }
+
+    pub fn rows_with_candidate(&self, value: Candidate<N>) -> Vec<&CellSet<N>> {
+        self.rows.iter().filter(|row| self.candidate_appears_in(row, value)).collect()
+    }
+
+    pub fn columns_with_candidate(&self, value: Candidate<N>) -> Vec<&CellSet<N>> {
+        self.cols.iter().filter(|col| self.candidate_appears_in(col, value)).collect()
+    }
+
+    pub fn regions_with_candidate(&self, value: Candidate<N>) -> Vec<&CellSet<N>> {
+        self.regions.iter().filter(|region| self.candidate_appears_in(region, value)).collect()
     }
 
     pub fn all_houses_containing(&self, cells: &CellSet<N>) -> Vec<&CellSet<N>> {
