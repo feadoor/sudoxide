@@ -70,7 +70,7 @@ impl<const N: usize> Grid<N> where Grid<N>: Mapper<N> {
             if clue.is_some() {
                 if empty_grid.has_candidate(CellIdx(idx), clue.unwrap()) {
                     empty_grid.place_value(CellIdx(idx), clue.unwrap());
-                } else {
+                } else if empty_grid.value(CellIdx(idx)) != Some(clue.unwrap()) {
                     return Err(GridParseError::Contradiction(CellIdx(idx)));
                 }
             }
