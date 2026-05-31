@@ -39,6 +39,14 @@ pub trait Classic<const N: usize> {
     }
 }
 
+pub trait Diagonal<const N: usize> {
+    fn diagonal_regions() -> Vec<CellSet<N>>;
+    fn empty_diagonal() -> Grid<N> {
+        let regions = Self::diagonal_regions();
+        Grid::empty(regions, vec![CellSet::empty(); N * N])
+    }
+}
+
 impl Classic<9> for Grid<9> {
 
     fn classic_regions() -> Vec<CellSet<9>> {
@@ -46,6 +54,16 @@ impl Classic<9> for Grid<9> {
             .map(|(r, c)| iproduct!(0 .. 3, 0 .. 3).map(move |(x, y)| CellIdx::from_row_and_col(r + x, c + y)))
             .map(CellSet::from_cells)
             .collect()
+    }
+}
+
+impl Diagonal<9> for Grid<9> {
+
+    fn diagonal_regions() -> Vec<CellSet<9>> {
+        let mut regions = Self::classic_regions();
+        regions.push(CellSet::from_cells((0 .. 9).map(|idx| CellIdx::from_row_and_col(idx, idx))));
+        regions.push(CellSet::from_cells((0 .. 9).map(|idx| CellIdx::from_row_and_col(idx, 8 - idx))));
+        regions
     }
 }
 
